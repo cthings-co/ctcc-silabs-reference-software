@@ -1,0 +1,8 @@
+/dts-v1/;
+
+#include "mgm240p_common.dtsi"
+#include "mgm240p-m2-fc-pinctrl.dtsi"
+
+&usart0 {
+	pinctrl-0 = <&usart0_m2_fc>;
+};

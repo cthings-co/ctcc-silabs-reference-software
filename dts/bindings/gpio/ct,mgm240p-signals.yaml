@@ -1,0 +1,19 @@
+description: CTHINGS MGM240P board signals
+
+compatible: "ct,mgm240p-signals"
+
+properties:
+  w-disable-gpios:
+    type: phandle-array
+    required: true
+    description: W_DISABLE signal
+
+  coex1-gpios:
+    type: phandle-array
+    required: true
+    description: COEX1 signal
+
+  coex2-gpios:
+    type: phandle-array
+    required: true
+    description: COEX2 signal

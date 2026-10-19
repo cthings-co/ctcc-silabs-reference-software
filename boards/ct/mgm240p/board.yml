@@ -4,3 +4,6 @@ board:
   vendor: ct
   socs:
     - name: mgm240pa32vnn
+      variants:
+        - name: mpcie
+        - name: m2_fc

@@ -1,0 +1,30 @@
+/*
+ * UART pin configuration for the CTHINGS MGM240P M.2 flow-control variant.
+ *
+ * USART0 TX  = PA5
+ * USART0 RX  = PA6
+ * USART0 RTS = PB0
+ * USART0 CTS = PB1
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/pinctrl/silabs/xg24-pinctrl.h>
+
+&pinctrl {
+	usart0_m2_fc: usart0_m2_fc {
+		group0 {
+			pins = <USART0_TX_PA5>,
+			       <USART0_RTS_PB0>;
+			drive-push-pull;
+			output-high;
+		};
+
+		group1 {
+			pins = <USART0_RX_PA6>,
+			       <USART0_CTS_PB1>;
+			input-enable;
+			silabs,input-filter;
+		};
+	};
+};

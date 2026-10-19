@@ -1,8 +1,14 @@
 /*
- * UART pin configuration for the CTHINGS MGM240P exercise board.
- * USART0 TX = PA5, RX = PA6.
+ * Common UART pin configuration for CTHINGS MGM240P cards.
+ *
+ * USART0 TX = PA5
+ * USART0 RX = PA6
+ *
+ * Used by both mPCIe and M.2 flow-control variants.
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 
 #include <zephyr/dt-bindings/pinctrl/silabs/xg24-pinctrl.h>
 

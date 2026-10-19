@@ -1,8 +1,19 @@
-/dts-v1/;
-
 #include <silabs/xg24/mgm240pa32vnn.dtsi>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include "mgm240p-pinctrl.dtsi"
+
+/*
+ * MGM240P debug interface (common to both card variants):
+ *
+ * PA1 - SWCLK
+ * PA2 - SWDIO
+ * PA3 - TRACEDATA0
+ * PA4 - TRACECLK
+ *
+ * These pins are connected to the debug interface.
+ * They are documented here but are not configured as GPIOs.
+ */
+
 
 / {
 	model = "CTHINGS MGM240P";
@@ -31,6 +42,14 @@
 			gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
 		};
 	};
+
+	mgm240p_signals: mgm240p-signals {
+		compatible = "ct,mgm240p-signals";
+
+		w-disable-gpios = <&gpiod 0 GPIO_ACTIVE_LOW>;
+		coex1-gpios = <&gpiod 2 GPIO_ACTIVE_HIGH>;
+		coex2-gpios = <&gpiod 1 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &usart0 {
@@ -45,6 +64,10 @@
 };
 
 &gpioa {
+	status = "okay";
+};
+
+&gpiod {
 	status = "okay";
 };
 
