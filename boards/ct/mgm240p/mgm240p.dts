@@ -1,0 +1,63 @@
+/dts-v1/;
+
+#include <silabs/xg24/mgm240pa32vnn.dtsi>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include "mgm240p-pinctrl.dtsi"
+
+/ {
+	model = "CTHINGS MGM240P";
+	compatible = "ct,mgm240p", "silabs,efr32mg24";
+
+	chosen {
+		zephyr,console = &usart0;
+		zephyr,flash = &flash0;
+		zephyr,sram = &sram0;
+		zephyr,shell-uart = &usart0;
+	};
+
+	aliases {
+		led0 = &led0_node;
+		led1 = &led1_node;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led0_node: led_0 {
+			gpios = <&gpioa 8 GPIO_ACTIVE_HIGH>;
+		};
+
+		led1_node: led_1 {
+			gpios = <&gpioa 7 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+&usart0 {
+	current-speed = <115200>;
+	pinctrl-0 = <&usart0_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&gpio {
+	status = "okay";
+};
+
+&gpioa {
+	status = "okay";
+};
+
+&cpu0 {
+	clock-frequency = <78000000>;
+};
+
+&hfrcodpll {
+    clock-frequency = <78000000>;
+    clocks = <&hfxo>;
+    dpll-autorecover;
+    dpll-edge = "fall";
+    dpll-lock = "phase";
+    dpll-m = <1919>;
+    dpll-n = <3839>;
+};
