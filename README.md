@@ -455,3 +455,146 @@ faster, consistent with the configured 500 ms toggle interval.
 
 Recovery without a valid application and slot-1 swap/rollback
 behavior remain untested.
+
+## Continuous Integration (CI)
+
+The repository uses GitHub Actions to automatically build, test,
+validate, and package firmware for the supported MGM240P variants.
+
+The CI configuration consists of two workflows:
+
+- `.github/workflows/build-firmwares.yml` - main CI workflow.
+- `.github/workflows/release-firmwares.yml` - reusable workflow
+  responsible for testing, building, validating, and packaging firmware.
+
+### Workflow triggers
+
+The CI pipeline runs automatically when:
+
+- Changes are pushed to the `main` branch.
+- A pull request is opened or updated.
+
+The pipeline can also be started manually using the
+**Run workflow** button in GitHub Actions.
+
+### Build configurations
+
+The pipeline builds three firmware configurations:
+
+| Configuration | Board | UART flow control |
+|---|---|---|
+| `mpcie-no-flow` | `mgm240p/mgm240pa32vnn/mpcie` | Disabled |
+| `m2-fc-no-flow` | `mgm240p/mgm240pa32vnn/m2_fc` | Disabled |
+| `m2-fc-flow` | `mgm240p/mgm240pa32vnn/m2_fc` | Enabled (RTS/CTS) |
+
+The M.2 configurations use dedicated Devicetree overlays:
+
+- `firmware/overlays/uart-fc-off.overlay`
+- `firmware/overlays/uart-fc-on.overlay`
+
+Firmware builds run inside a pinned Zephyr CI Docker image.
+
+Workspace dependencies are selected using the `west.yml` manifest,
+which references Silicon Labs SDK `v2026.6.0`.
+
+The CI environment uses Zephyr SDK toolchain version `1.0.1`.
+
+### Automated validation
+
+The pipeline performs the following validation steps:
+
+1. Run Python unit tests.
+2. Build firmware for all three configurations.
+3. Verify firmware artifacts and SHA-256 checksums.
+4. Package the verified firmware artifacts.
+
+Python unit tests are executed using:
+
+```bash
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+```
+
+Firmware builds use the scripts located in `.ci_scripts/`.
+
+The pipeline installs the pinned Silicon Labs Simplicity Commander
+and prepares the Zephyr workspace before building.
+
+The packaging job runs only after the Python unit tests and
+all firmware builds have completed successfully.
+
+### Firmware artifacts
+
+Each successful firmware build uploads its artifacts to GitHub Actions.
+
+Individual firmware artifact sets are retained for **14 days**.
+
+After all builds complete, the packaging job creates a ZIP archive
+containing the verified firmware artifacts.
+
+The archive follows this naming convention:
+
+```text
+ctcc-silabs-firmwares-<ref>-<commit>-<date>.zip
+```
+
+Where:
+
+- `<ref>` is the sanitized Git branch or reference name.
+- `<commit>` is the first eight characters of the commit SHA.
+- `<date>` is the UTC date in `YYYYMMDD` format.
+
+A corresponding SHA-256 checksum file is generated:
+
+```text
+ctcc-silabs-firmwares-<ref>-<commit>-<date>.zip.sha256
+```
+
+The final package is uploaded as a GitHub Actions artifact named
+`firmware-package`.
+
+The final package is retained for **90 days**.
+
+### Downloading firmware artifacts
+
+To download generated firmware:
+
+1. Open the repository on GitHub.
+2. Navigate to the **Actions** tab.
+3. Select the **CTCC Silicon Labs Firmwares CI** workflow.
+4. Open a successful workflow run.
+5. Locate the **Artifacts** section.
+6. Download the `firmware-package` artifact.
+7. Extract the downloaded artifact to access the firmware ZIP
+   and its SHA-256 checksum file.
+
+Verify the firmware ZIP archive using:
+
+```bash
+sha256sum -c <firmware-package-name>.zip.sha256
+```
+
+Replace `<firmware-package-name>` with the actual archive filename,
+without the `.zip` extension.
+
+### CI limitations
+
+The CI pipeline verifies firmware builds, runs Python unit tests,
+and checks generated artifacts.
+
+It does not replace hardware validation on physical MGM240P devices.
+
+MCUboot startup, firmware flashing, and UART-based firmware updates
+must be validated separately on the target hardware.
+
+Instructions for MCUboot, initial programming, firmware signing,
+and UART recovery are provided in the **Open Bootloader** section.
+
+## Firmware releases
+
+The current GitHub Actions configuration generates downloadable
+workflow artifacts.
+
+It does not automatically publish firmware to GitHub Releases.
+
+Firmware packages can be downloaded from successful GitHub Actions
+runs and used for further validation or release preparation.
