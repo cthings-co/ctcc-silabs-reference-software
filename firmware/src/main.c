@@ -1,3 +1,4 @@
+#include <zephyr/dfu/mcuboot.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
@@ -10,11 +11,29 @@ static const struct gpio_dt_spec led =
 
 int main(void)
 {
+    int rc;
+
     if (!gpio_is_ready_dt(&led)) {
+        printk("LED device is not ready\n");
         return 0;
     }
 
-    gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
+    rc = gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
+    if (rc != 0) {
+        printk("LED initialization failed: %d\n", rc);
+        return 0;
+    }
+
+    /* Confirm a test image after successful basic initialization. */
+    if (!boot_is_img_confirmed()) {
+        rc = boot_write_img_confirmed();
+
+        if (rc != 0) {
+            printk("MCUboot image confirmation failed: %d\n", rc);
+            return 0;
+        }
+        printk("MCUboot image confirmed\n");
+    }
 
     while (1) {
         printk("CTHINGS Silicon Labs reference firmware\n");
