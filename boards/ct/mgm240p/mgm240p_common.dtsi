@@ -24,6 +24,7 @@
 		zephyr,flash = &flash0;
 		zephyr,sram = &sram0;
 		zephyr,shell-uart = &usart0;
+		zephyr,code-partition = &slot0_partition;
 	};
 
 	aliases {
@@ -76,11 +77,59 @@
 };
 
 &hfrcodpll {
-    clock-frequency = <78000000>;
-    clocks = <&hfxo>;
-    dpll-autorecover;
-    dpll-edge = "fall";
-    dpll-lock = "phase";
-    dpll-m = <1919>;
-    dpll-n = <3839>;
+	clock-frequency = <78000000>;
+	clocks = <&hfxo>;
+	dpll-autorecover;
+	dpll-edge = "fall";
+	dpll-lock = "phase";
+	dpll-m = <1919>;
+	dpll-n = <3839>;
+};
+
+/*
+ * Internal flash layout for MCUboot.
+ *
+ * Total flash: 1536 KiB
+ * Erase page: 8 KiB
+ *
+ * MCUboot: 128 KiB
+ * Slot 0: 696 KiB
+ * Slot 1: 704 KiB
+ * Storage: 8 KiB
+ */
+
+&flash0 {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ranges = <0x00000000 0x08000000 DT_SIZE_K(1536)>;
+
+    partitions {
+        ranges;
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        boot_partition: partition@0 {
+            compatible = "zephyr,mapped-partition";
+            label = "mcuboot";
+            reg = <0x00000000 0x00020000>;
+        };
+
+        slot0_partition: partition@20000 {
+            compatible = "zephyr,mapped-partition";
+            label = "image-0";
+            reg = <0x00020000 0x000AE000>;
+        };
+
+        slot1_partition: partition@ce000 {
+            compatible = "zephyr,mapped-partition";
+            label = "image-1";
+            reg = <0x000CE000 0x000B0000>;
+        };
+
+        storage_partition: partition@17e000 {
+            compatible = "zephyr,mapped-partition";
+            label = "storage";
+            reg = <0x0017E000 0x00002000>;
+        };
+    };
 };

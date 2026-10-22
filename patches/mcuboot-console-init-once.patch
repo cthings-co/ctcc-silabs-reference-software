@@ -1,0 +1,31 @@
+diff --git a/boot/zephyr/serial_adapter.c b/boot/zephyr/serial_adapter.c
+index de2e5c51..602cf8dd 100644
+--- a/boot/zephyr/serial_adapter.c
++++ b/boot/zephyr/serial_adapter.c
+@@ -114,6 +114,13 @@ boot_console_init(void)
+ {
+ 	int i;
+ 
++	static int initialized;
++	int rc;
++
++	if (initialized) {
++		return 0;
++	}
++
+ 	/* Zephyr UART handler takes an empty buffer from avail_queue,
+ 	 * stores UART input in it until EOL, and then puts it into
+ 	 * lines_queue.
+@@ -125,7 +132,11 @@ boot_console_init(void)
+ 		sys_slist_append(&avail_queue, &line_bufs[i].node);
+ 	}
+ 
+-	return boot_uart_fifo_init();
++	rc = boot_uart_fifo_init();
++	if (rc == 0) {
++		initialized = 1;
++	}
++	return rc;
+ }
+ 
+ static void

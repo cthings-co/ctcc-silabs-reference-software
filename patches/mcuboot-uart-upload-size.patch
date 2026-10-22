@@ -1,0 +1,45 @@
+diff --git a/boot/boot_serial/src/boot_serial.c b/boot/boot_serial/src/boot_serial.c
+index 9b4e689b..7a1f815a 100644
+--- a/boot/boot_serial/src/boot_serial.c
++++ b/boot/boot_serial/src/boot_serial.c
+@@ -967,6 +967,17 @@ bs_upload(char *buf, int len)
+ 
+     /* Use image number only from packet with offset == 0. */
+     if (img_chunk_off == 0) {
++#if defined(MCUBOOT_SERIAL_DIRECT_IMAGE_UPLOAD)
++        /*
++        * Require an explicit destination to avoid accidentally
++        * overwriting the primary application slot.
++        */
++        if (img_num_tmp == UINT_MAX) {
++            BOOT_LOG_ERR("Direct upload requires an image number");
++            goto out_invalid_data;
++        }
++#endif
++
+         if (img_num_tmp != UINT_MAX) {
+             img_num = img_num_tmp;
+         } else {
+@@ -1023,6 +1034,22 @@ bs_upload(char *buf, int len)
+ 
+ #endif
+ 
++#if defined(MCUBOOT_SWAP_USING_OFFSET) && \
++    defined(MCUBOOT_SERIAL_DIRECT_IMAGE_UPLOAD) && \
++    defined(MCUBOOT_SERIAL_IMG_GRP_SLOT_INFO)
++        /*
++         * Reject oversized signed images before erasing Flash.
++         * This board supports one application image with two slots.
++         */
++        const struct image_max_size *max_sizes = boot_get_max_app_size();
++
++        if (!max_sizes[0].calculated ||
++            img_size_tmp > max_sizes[0].max_size) {
++            BOOT_LOG_ERR("Image exceeds MCUboot maximum size");
++            goto out_invalid_data;
++        }
++#endif
++
+ #ifndef MCUBOOT_ERASE_PROGRESSIVELY
+         /* Non-progressive erase erases entire image slot when first chunk of
+          * an image is received.
