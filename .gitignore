@@ -2,3 +2,7 @@
 /build_*/
 **/build/
 /**/build_*/
+
+# Python-generated files
+__pycache__/
+*.pyc

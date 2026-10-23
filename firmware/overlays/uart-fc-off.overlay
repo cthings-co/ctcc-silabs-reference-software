@@ -1,0 +1,4 @@
+/* M.2 FC: explicitly disable UART RTS/CTS. */
+&usart0 {
+    /delete-property/ hw-flow-control;
+};
