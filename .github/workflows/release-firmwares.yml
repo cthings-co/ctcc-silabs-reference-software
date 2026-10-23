@@ -93,8 +93,10 @@ jobs:
           echo "===== DISK BEFORE CLEANUP ====="
           df -h /
 
-          # Build jobs use the pinned Zephyr Docker image.
-          # These preinstalled host toolchains are not needed.
+          # The GitHub-hosted runner may run out of disk space when pulling
+          # the pinned Zephyr Docker image.
+          # Remove unused preinstalled toolchains to free disk space
+          # before starting the containerized build.
           for dir in \
             /usr/local/lib/android \
             /usr/share/dotnet \

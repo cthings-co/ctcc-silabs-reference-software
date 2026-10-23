@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-#
-#
-#
-#
+# Verify SHA-256 checksums of firmware artifacts produced by CI.
+# Find SHA256SUMS files under the specified artifact directory
+# and verify the checksums of the listed files.
+# Optionally validate the number of artifact sets using EXPECTED_SETS.
 #
 
 set -euo pipefail

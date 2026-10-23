@@ -46,11 +46,9 @@ python3 "$west_root/bootloader/mcuboot/scripts/imgtool.py" verify \
   --key "$west_root/bootloader/mcuboot/root-ec-p256.pem" \
   "$signed"
 
+# Image size is validated during the Zephyr build using Devicetree
+# partition sizes by the check_mcuboot_signed_image target.
 image_size="$(stat -c '%s' "$signed")"
-if [ "$image_size" -gt 704512 ]; then
-  echo "ERROR: Signed image ($image_size) exceeds the 704512 byte limit" >&2
-  exit 1
-fi
 
 python3 "$GITHUB_WORKSPACE/.ci_scripts/verify_uart_flow.py" \
   "$build" "$EXPECTED_FLOW_CONTROL"
