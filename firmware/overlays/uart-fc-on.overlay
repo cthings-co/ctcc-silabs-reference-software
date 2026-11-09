@@ -1,0 +1,4 @@
+/* M.2 FC: enable UART RTS/CTS in the application. */
+&usart0 {
+    hw-flow-control;
+};

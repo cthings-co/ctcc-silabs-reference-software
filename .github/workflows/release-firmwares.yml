@@ -1,0 +1,216 @@
+name: CTCC Silicon Labs Firmware Build
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Git ref to build.
+        type: string
+        required: true
+      event_name:
+        description: Calling event type.
+        type: string
+        required: true
+      ref_name:
+        description: Branch or ref name for artifact naming.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ctcc-silabs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Same digest-pinned Zephyr CI image and SDK path as the supplied nRF reference.
+  ZEPHYR_CI_IMAGE: zephyrprojectrtos/ci@sha256:e77ad1d2f9c02e2e4343804c7cfe78c2b89cf15cb32aab083658db94a801ad8d
+  ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-1.0.1
+
+jobs:
+  python-tests:
+    name: Python unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Run project unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+  build-matrix:
+    name: Build ${{ matrix.config.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        config:
+          - name: mpcie-no-flow
+            board: mgm240p/mgm240pa32vnn/mpcie
+            overlay: ''
+            flow_control: 'off'
+          - name: m2-fc-no-flow
+            board: mgm240p/mgm240pa32vnn/m2_fc
+            overlay: firmware/overlays/uart-fc-off.overlay
+            flow_control: 'off'
+          - name: m2-fc-flow
+            board: mgm240p/mgm240pa32vnn/m2_fc
+            overlay: firmware/overlays/uart-fc-on.overlay
+            flow_control: 'on'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      # Download and verify the vendor tool *before* the slow Zephyr workspace
+      # setup: a blocked release URL should fail in under a few minutes.
+      - name: Install pinned Simplicity Commander
+        shell: bash
+        timeout-minutes: 7
+        run: bash .ci_scripts/install_commander.sh
+
+      - name: Check runner storage
+        shell: bash
+        run: |
+          df -h "$GITHUB_WORKSPACE" /var/lib/docker || true
+          docker system df || true
+
+      - name: Free runner disk space for Zephyr
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "===== DISK BEFORE CLEANUP ====="
+          df -h /
+
+          # The GitHub-hosted runner may run out of disk space when pulling
+          # the pinned Zephyr Docker image.
+          # Remove unused preinstalled toolchains to free disk space
+          # before starting the containerized build.
+          for dir in \
+            /usr/local/lib/android \
+            /usr/share/dotnet \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/share/powershell \
+            /usr/share/swift \
+            /opt/hostedtoolcache
+          do
+            if [ -d "$dir" ]; then
+              echo "Removing unused runner tools: $dir"
+              sudo rm -rf -- "$dir"
+            fi
+          done
+
+          docker image prune --all --force
+          sudo apt-get clean
+
+          echo "===== DISK AFTER CLEANUP ====="
+          df -h /
+
+      - name: Prepare pinned west workspace in Zephyr container
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace_root="$(dirname "$GITHUB_WORKSPACE")"
+          home_dir="$workspace_root/.container-home"
+          mkdir -p "$home_dir"
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$workspace_root:$workspace_root" \
+            -w "$GITHUB_WORKSPACE" \
+            -e GITHUB_WORKSPACE \
+            -e HOME="$home_dir" \
+            -e ZEPHYR_SDK_INSTALL_DIR \
+            "$ZEPHYR_CI_IMAGE" \
+            bash .ci_scripts/prepare_workspace.sh
+
+      - name: Build and validate firmware in Zephyr container
+        shell: bash
+        env:
+          BUILD_NAME: ${{ matrix.config.name }}
+          BOARD: ${{ matrix.config.board }}
+          OVERLAY: ${{ matrix.config.overlay }}
+          EXPECTED_FLOW_CONTROL: ${{ matrix.config.flow_control }}
+        run: |
+          set -euo pipefail
+          workspace_root="$(dirname "$GITHUB_WORKSPACE")"
+          home_dir="$workspace_root/.container-home"
+          mkdir -p "$home_dir"
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$workspace_root:$workspace_root" \
+            -w "$GITHUB_WORKSPACE" \
+            -e GITHUB_WORKSPACE \
+            -e HOME="$home_dir" \
+            -e ZEPHYR_SDK_INSTALL_DIR \
+            -e BUILD_NAME \
+            -e BOARD \
+            -e OVERLAY \
+            -e EXPECTED_FLOW_CONTROL \
+            "$ZEPHYR_CI_IMAGE" \
+            bash .ci_scripts/build_sdk.sh
+
+      - name: Upload verified artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.config.name }}
+          path: artifacts/${{ matrix.config.name }}
+          retention-days: 14
+          if-no-files-found: error
+
+  package:
+    name: Package Firmware Artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: [python-tests, build-matrix]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Download all firmware artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: all_artifacts
+
+      - name: Check SHA-256 sums and completeness
+        shell: bash
+        env:
+          EXPECTED_SETS: '3'
+        run: bash .ci_scripts/verify_checksums.sh all_artifacts
+
+      - name: Create reproducible-style firmware bundle
+        shell: bash
+        env:
+          REF_NAME: ${{ inputs.ref_name }}
+        run: |
+          set -euo pipefail
+          safe_ref="$(printf '%s' "$REF_NAME" | LC_ALL=C tr -c '[:alnum:]._-' '-')"
+          bundle="ctcc-silabs-firmwares-${safe_ref}-${GITHUB_SHA:0:8}-$(date -u +%Y%m%d).zip"
+          (cd all_artifacts && zip -q -r "../$bundle" .)
+          sha256sum "$bundle" > "$bundle.sha256"
+          sha256sum -c "$bundle.sha256"
+          echo "BUNDLE_NAME=$bundle" >> "$GITHUB_ENV"
+
+      - name: Upload final bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: firmware-package
+          path: |
+            ${{ env.BUNDLE_NAME }}
+            ${{ env.BUNDLE_NAME }}.sha256
+          if-no-files-found: error
+          retention-days: 90
