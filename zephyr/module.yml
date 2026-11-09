@@ -3,3 +3,4 @@ name: ctcc-silabs-reference-software
 build:
   settings:
     board_root: .
+    dts_root: .
