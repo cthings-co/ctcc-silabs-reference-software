@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 # Reserve the extra erase sector required by MCUboot swap-with-offset.
 if(SB_CONFIG_BOOTLOADER_MCUBOOT)
   sysbuild_get(mcuboot_footer IMAGE mcuboot

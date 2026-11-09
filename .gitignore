@@ -6,3 +6,14 @@
 # Python-generated files
 __pycache__/
 *.pyc
+
+# Local development environment
+.venv/
+
+# Generated CI dependencies and metadata
+/.ci_commander/
+/python-requirements.lock
+
+# Generated firmware artifacts
+/artifacts/
+/all_artifacts/

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
 """Verify actual DTS flow-control state for firmware and MCUboot images."""
 from pathlib import Path
 import re

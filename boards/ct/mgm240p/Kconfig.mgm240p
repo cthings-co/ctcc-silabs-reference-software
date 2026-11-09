@@ -1,2 +1,5 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 config BOARD_MGM240P
 	select SOC_MGM240PA32VNN

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 board:
   name: mgm240p
   full_name: CTHINGS MGM240P
