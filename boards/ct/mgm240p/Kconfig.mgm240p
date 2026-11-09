@@ -1,0 +1,2 @@
+config BOARD_MGM240P
+	select SOC_MGM240PA32VNN

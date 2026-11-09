@@ -1,0 +1,6 @@
+board:
+  name: mgm240p
+  full_name: CTHINGS MGM240P
+  vendor: ct
+  socs:
+    - name: mgm240pa32vnn

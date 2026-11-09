@@ -1,0 +1,13 @@
+manifest:
+  remotes:
+    - name: silabs
+      url-base: https://github.com/SiliconLabsSoftware
+
+  projects:
+    - name: zephyr-silabs
+      remote: silabs
+      revision: v2026.6.0
+      import: true
+
+  self:
+    path: ctcc-silabs-reference-software
