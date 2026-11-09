@@ -1,3 +1,5 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
 name: CTCC Silicon Labs Firmware Build
 
 on:
@@ -24,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Same digest-pinned Zephyr CI image and SDK path as the supplied nRF reference.
+  # Pinned Zephyr CI image and SDK path for firmware builds.
   ZEPHYR_CI_IMAGE: zephyrprojectrtos/ci@sha256:e77ad1d2f9c02e2e4343804c7cfe78c2b89cf15cb32aab083658db94a801ad8d
   ZEPHYR_SDK_INSTALL_DIR: /opt/toolchains/zephyr-sdk-1.0.1
 

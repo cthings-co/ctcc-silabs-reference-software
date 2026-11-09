@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Silicon Labs adaptation of the reference nRF workspace preparation script.
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+# Prepare the Zephyr workspace for Silicon Labs firmware builds.
 set -euo pipefail
 
 : "${GITHUB_WORKSPACE:?}"
@@ -27,7 +29,7 @@ python3 -m pip install 'west==1.5.0'
 cd "$west_root"
 west init -l "$repo"
 
-# Shallow update, with bounded retries, matching the nRF reference approach.
+# Use shallow updates with bounded retries.
 for attempt in 1 2 3; do
   if west update --narrow -o=--depth=1; then
     break

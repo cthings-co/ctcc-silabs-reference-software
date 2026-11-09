@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 """Host-side assembly test runner for MGM240P mPCIe and M.2 variants."""
 
 import time

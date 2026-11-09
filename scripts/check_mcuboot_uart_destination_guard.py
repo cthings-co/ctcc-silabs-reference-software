@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 """Regression test for MCUboot UART upload destination selection."""
 
 from pathlib import Path

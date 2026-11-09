@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
 #
 # Verify SHA-256 checksums of firmware artifacts produced by CI.
 # Find SHA256SUMS files under the specified artifact directory

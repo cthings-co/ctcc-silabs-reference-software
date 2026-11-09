@@ -1,0 +1,50 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
+name: CTCC Silicon Labs Firmware Tag Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-tag:
+    name: Validate firmware release tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout tagged commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate tag against firmware version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 .ci_scripts/check_release_tag.py "$RELEASE_TAG"
+
+      - name: Verify tagged commit belongs to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor HEAD FETCH_HEAD || {
+            echo "ERROR: Tagged commit is not part of main"
+            exit 1
+          }
+
+  build-and-package:
+    name: Build tagged firmware and SBOM
+    needs: validate-release-tag
+    uses: ./.github/workflows/release-firmwares.yml
+    with:
+      source_ref: ${{ github.sha }}
+      event_name: ${{ github.event_name }}
+      ref_name: ${{ github.ref_name }}

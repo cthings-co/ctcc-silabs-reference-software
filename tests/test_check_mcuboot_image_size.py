@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 """Regression tests for the MCUboot signed-image size validator."""
 
 import subprocess

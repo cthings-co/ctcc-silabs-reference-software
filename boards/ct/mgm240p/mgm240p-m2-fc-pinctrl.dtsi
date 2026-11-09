@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2026 CTHINGS.CO
+ *
  * UART pin configuration for the CTHINGS MGM240P M.2 flow-control variant.
  *
  * USART0 TX  = PA5

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 """Host-side regression test for the MCUboot UART image-size guard."""
 
 from pathlib import Path

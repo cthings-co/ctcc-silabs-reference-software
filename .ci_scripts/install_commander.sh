@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
 # Install a SHA-256-pinned Silicon Labs Commander on the GitHub Actions HOST,
 # before starting the large Zephyr container. The workspace is mounted inside
 # the container, so the command is available to Zephyr/CMake there as well.

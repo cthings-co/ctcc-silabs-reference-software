@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2026 CTHINGS.CO
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <zephyr/dfu/mcuboot.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>

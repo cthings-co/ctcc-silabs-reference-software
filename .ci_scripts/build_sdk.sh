@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# MGM240P version of the nRF reference .ci_scripts/build_sdk.sh.
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 
 : "${GITHUB_WORKSPACE:?}"
@@ -28,11 +29,20 @@ if [ -n "${OVERLAY:-}" ]; then
   cmake_args+=("-Dfirmware_DTC_OVERLAY_FILE=$GITHUB_WORKSPACE/$OVERLAY")
 fi
 
+west spdx --init -d "$build/firmware"
+west spdx --init -d "$build/mcuboot"
+
 west build --sysbuild \
   -b "$BOARD" \
   -d "$build" \
   "$GITHUB_WORKSPACE/firmware" \
-  -p always -- "${cmake_args[@]}"
+  -- "${cmake_args[@]}" \
+  -DCONFIG_BUILD_OUTPUT_META=y \
+  -Dmcuboot_CONFIG_BUILD_OUTPUT_META=y
+
+for image in firmware mcuboot; do
+  west spdx -d "$build/$image"
+done
 
 signed="$build/firmware/zephyr/zephyr.signed.bin"
 mcuboot_hex="$build/mcuboot/zephyr/zephyr.hex"
@@ -60,7 +70,24 @@ cp "$firmware_hex" "$dest/${BUILD_NAME}_firmware.signed.hex"
 cp "$mcuboot_hex" "$dest/${BUILD_NAME}_mcuboot.hex"
 cp "$GITHUB_WORKSPACE/python-requirements.lock" "$dest/${BUILD_NAME}_python-requirements.lock"
 
-# The reference nRF CI also publishes a merged programming HEX.
+# Include SPDX SBOMs for both images in the firmware package.
+for image in firmware mcuboot; do
+  mkdir -p "$dest/sbom/$image"
+
+  for document in app zephyr build modules-deps; do
+    src="$build/$image/spdx/$document.spdx"
+
+    test -s "$src" || {
+      echo "ERROR: Missing SPDX document: $src" >&2
+      exit 1
+    }
+
+    cp "$src" "$dest/sbom/$image/$document.spdx"
+  done
+done
+
+
+# Generate a merged programming HEX for MCUboot and firmware.
 # Reject overlapping addresses rather than silently overwriting either image.
 python3 - "$mcuboot_hex" "$firmware_hex" "$dest/${BUILD_NAME}_merged.hex" <<'PY_MERGE'
 from intelhex import IntelHex

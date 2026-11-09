@@ -1,3 +1,6 @@
+# Copyright (c) 2026 CTHINGS.CO
+# SPDX-License-Identifier: Apache-2.0
+
 # Additional configuration for the application image.
 if(SB_CONFIG_BOOTLOADER_MCUBOOT)
   get_property(image_scripts TARGET ${DEFAULT_IMAGE} PROPERTY IMAGE_CONF_SCRIPT)
